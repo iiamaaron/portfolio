@@ -14,6 +14,8 @@ app = Flask(__name__)
 # Database  config
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///portfolio.db'
 database_url = os.getenv('DATABASE_URL', 'sqlite:///portfolio.db')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -28,6 +30,8 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 db = SQLAlchemy(app)
+mail = Mail(app)
+
 
 @app.route('/')
 def index():
@@ -100,7 +104,6 @@ def admin_dashboard():
 def admin_logout():
     session.pop('admin', None)
     return redirect(url_for('admin_login'))
-mail = Mail(app)
 
 
 
