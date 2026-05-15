@@ -17,6 +17,11 @@ database_url = os.getenv('DATABASE_URL', 'sqlite:///portfolio.db')
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'connect_args': {'sslmode': 'require'},
+    'pool_pre_ping': True,
+    'pool_recycle': 300
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Mail config
@@ -45,6 +50,13 @@ class Message(db.Model): #A table in the database
     #Created_at records when the message was sent, automatically
     created_at = db.Column(db.DateTime, default = db.func.now())
 
+
+
+
+
+
+
+
 @app.route('/api/contact', methods=['POST'])
 def contact():
     data = request.get_json() #reads the data coming from the frontend form
@@ -54,26 +66,40 @@ def contact():
 
     # Validates that all three fields are present
     if not name or not email or not message:
-        return jsonify({'error': 'All fields are required!'})
-
-    # create a Message object
-    new_message = Message(name=name, email=email, message=message)
-    # and save it to the database
-    db.session.add(new_message)
-    db.session.commit()
-
-    msg = MailMessage(
-        subject = f'New message from {name}',
-        sender = os.getenv('MAIL_USERNAME'),
-        recipients = [os.getenv('MAIL_USERNAME')],
-        body = f'Name: {name}\nEmail: {email}\n\nMessage: \n{message}'
-    )
+        return jsonify({'error': 'All fields are required!'}), 400
 
     try:
+        # create a Message object
+        new_message = Message(name=name, email=email, message=message)
+        # and save it to the database
+        db.session.add(new_message)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Database error: {e}")
+        return jsonify({'error': 'Could not save message'}), 500
+
+    try:
+        msg = MailMessage(
+            subject = f'New message from {name}',
+            sender = os.getenv('MAIL_USERNAME'),
+            recipients = [os.getenv('MAIL_USERNAME')],
+            body = f'Name: {name}\nEmail: {email}\n\nMessage: \n{message}'
+        )
         mail.send(msg)
     except Exception as e:
         print(f"Mail error: {e}")
+
     return jsonify({'success': 'Message received'}), 200
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
