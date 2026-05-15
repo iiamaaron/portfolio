@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message as MailMessage
 from dotenv import load_dotenv
@@ -24,6 +24,10 @@ app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
 db = SQLAlchemy(app)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 class Message(db.Model): #A table in the database
     id = db.Column(db.Integer, primary_key = True)
