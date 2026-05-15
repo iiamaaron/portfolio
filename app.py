@@ -87,6 +87,7 @@ def contact():
         sg.send(sg_mail)
     except Exception as e:
         print(f"Mail error: {e}")
+        return jsonify({'mail_error': str(e)}), 200
 
     return jsonify({'success': 'Message received'}), 200
 
