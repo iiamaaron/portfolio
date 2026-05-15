@@ -12,7 +12,9 @@ load_dotenv() #reads .env file so secrets stays out of the code
 app = Flask(__name__)
 
 # Database  config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///portfolio.db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///portfolio.db'
+database_url = os.getenv('DATABASE_URL', 'sqlite:///portfolio.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Mail config
