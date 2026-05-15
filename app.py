@@ -62,7 +62,11 @@ def contact():
         recipients = [os.getenv('MAIL_USERNAME')],
         body = f'Name: {name}\nEmail: {email}\n\nMessage: \n{message}'
     )
-    mail.send(msg)
+
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print(f"Mail error: {e}")
     return jsonify({'success': 'Message received'}), 200
 
 
@@ -96,6 +100,12 @@ def admin_logout():
     return redirect(url_for('admin_login'))
 mail = Mail(app)
 
+
+
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
     app.run(debug=True)
+
 
