@@ -79,6 +79,8 @@ def contact():
         print(f"Database error: {e}")
         return jsonify({'error': 'Could not save message'}), 500
 
+    return jsonify({'success': 'Message received'}), 200
+"""
     try:
         msg = MailMessage(
             subject = f'New message from {name}',
@@ -91,7 +93,7 @@ def contact():
         print(f"Mail error: {e}")
 
     return jsonify({'success': 'Message received'}), 200
-
+"""
 
 
 
