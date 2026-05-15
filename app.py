@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 from flask import session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail, Message as MailMessage
 from dotenv import load_dotenv
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 import os
 
 #.env the bridge btw the environment it runs in
@@ -17,15 +18,18 @@ database_url = os.getenv('DATABASE_URL', 'sqlite:///portfolio.db')
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'connect_args': {'sslmode': 'require'},
     'pool_pre_ping': True,
     'pool_recycle': 300
 }
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 # Mail config
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+"""app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 
@@ -36,7 +40,7 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 db = SQLAlchemy(app)
 mail = Mail(app)
-
+"""
 
 @app.route('/')
 def index():
@@ -49,13 +53,6 @@ class Message(db.Model): #A table in the database
     message = db.Column(db.Text, nullable = False)
     #Created_at records when the message was sent, automatically
     created_at = db.Column(db.DateTime, default = db.func.now())
-
-
-
-
-
-
-
 
 @app.route('/api/contact', methods=['POST'])
 def contact():
@@ -79,7 +76,22 @@ def contact():
         print(f"Database error: {e}")
         return jsonify({'error': 'Could not save message'}), 500
 
+    try:
+        sg_mail = Mail(
+            from_email=os.getenv('MAIL_USERNAME'),
+            to_emails=os.getenv('MAIL_USERNAME'),
+            subject=f'New message from {name}',
+            plain_text_content=f'Name: {name}\nEmail: {email}\n\nMessage:\n{message}'
+        )
+        sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
+        sg.send(sg_mail)
+    except Exception as e:
+        print(f"Mail error: {e}")
+
     return jsonify({'success': 'Message received'}), 200
+
+
+
 """
     try:
         msg = MailMessage(
@@ -94,14 +106,6 @@ def contact():
 
     return jsonify({'success': 'Message received'}), 200
 """
-
-
-
-
-
-
-
-
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
