@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <section style="max-width: 900px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+            <p class="section-label" style="margin-bottom: 0;">Contact messages</p>
+            <a href="/admin/logout" class="btn-secondary">Log out</a>
+        </div>
+
+        {% if messages %}
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #e8e8e8; text-align: left;">
+                        <th style="padding: 10px 12px; color: #999; font-weight: 500;">Name</th>
+                        <th style="padding: 10px 12px; color: #999; font-weight: 500;">Email</th>
+                        <th style="padding: 10px 12px; color: #999; font-weight: 500;">Message</th>
+                        <th style="padding: 10px 12px; color: #999; font-weight: 500;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for msg in messages %}
+                    <tr style="border-bottom: 1px solid #f0f0f0;">
+                        <td style="padding: 12px;">{{ msg.name }}</td>
+                        <td style="padding: 12px; color: #555;">{{ msg.email }}</td>
+                        <td style="padding: 12px; color: #555; max-width: 300px;">{{ msg.message }}</td>
+                        <td style="padding: 12px; color: #999;">{{ msg.created_at.strftime('%b %d, %Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="color: #999; font-size: 14px;">No messages yet.</p>
+        {% endif %}
+    </section>
+</body>
+</html>

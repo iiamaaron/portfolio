@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template
+from flask import session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message as MailMessage
 from dotenv import load_dotenv
@@ -22,6 +23,7 @@ app.config['MAIL_USE_TLS'] = True
 #pulls those secret values in safely
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 db = SQLAlchemy(app)
 
@@ -63,6 +65,35 @@ def contact():
     mail.send(msg)
     return jsonify({'success': 'Message received'}), 200
 
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if username == os.getenv('ADMIN_USERNAME') and password == os.getenv('ADMIN_PASSWORD'):
+            session['admin'] = True
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return render_template('login.html', error='Invalid credentials')
+
+    return render_template('login.html')
+
+
+@app.route('/admin')
+def admin_dashboard():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    messages = Message.query.order_by(Message.created_at.desc()).all()
+    return render_template('admin.html', messages=messages)
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin', None)
+    return redirect(url_for('admin_login'))
 mail = Mail(app)
 
 if __name__ == '__main__':
